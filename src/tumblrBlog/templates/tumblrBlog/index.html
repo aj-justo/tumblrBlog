@@ -1,0 +1,29 @@
+{% load filters %}
+<html>
+	<head>
+		<title>TumblrBlogging</title>
+	</head>
+	<body>
+		<h1>Latest posts</h1>
+		{% if latest_posts %}
+		<nav id="latestPosts">
+			<ul>
+				{% for post in latest_posts %}
+				<li>
+					<article>
+						<h2><a href="/posts/{{ post.id }}/">{{ post|getkey:'regular-title' }}</a></h2>
+						<article>
+							{{post|getkey:'regular-body'|truncatewords:50}}
+						</article>
+					</article>
+				</li>
+				{% endfor %}
+			</ul>
+		</nav>
+		{% else %}
+		<p>
+			No posts have been written yet.
+		</p>
+		{% endif %}
+	</body>
+</html>
