@@ -11,10 +11,11 @@
 				{% for post in latest_posts %}
 				<li>
 					<article>
-						<h2><a href="/posts/{{ post.id }}/">{{ post|getkey:'regular-title' }}</a></h2>
+						<h2><a href="/posts/{{ post.id }}/{{ post.slug }}/">{{ post|getkey:'regular-title' }}</a></h2>
 						<article>
-							{{post|getkey:'regular-body'|truncatewords:50}}
+							{{post|getkey:'regular-body'|truncatewords:40|safe}}
 						</article>
+						<date>{{post|getkey:'unix-timestamp'|time_to_date}}</date>
 					</article>
 				</li>
 				{% endfor %}

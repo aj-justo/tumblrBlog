@@ -7,6 +7,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
     # Examples:
     url(r'^$', 'tumblrBlog.views.index', name='index'),
+    url(r'^posts/(?P<post_id>\d+)/', 'tumblrBlog.views.single'),
     # url(r'^tumblrBlog/', include('tumblrBlog.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:

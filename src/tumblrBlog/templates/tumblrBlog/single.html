@@ -1,0 +1,23 @@
+{% load filters %}
+<html>
+	<head>
+		<title>TumblrBlogging</title>
+	</head>
+	<body>
+		{% if post %} 
+		<article>
+			<h2><a href="/posts/{{ post.id }}/{{ post.slug }}/">{{ post|getkey:'regular-title' }}</a></h2>
+			<article>
+				{{post|getkey:'regular-body'|safe}}
+			</article>
+			<date>
+				{{post|getkey:'unix-timestamp'|time_to_date}}
+			</date>
+		</article>
+		{% else %}
+		<p>
+			The post couldn't been found
+		</p>
+		{% endif %}
+	</body>
+</html>

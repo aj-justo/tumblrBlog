@@ -145,3 +145,9 @@ LOGGING = {
         },
     }
 }
+
+# your tumblr url without the 'http://' part
+TUMBLR_USER = 'ajweb.tumblr.com'
+# we will NOT check the feed unless
+# this time has elapsed since last checking 
+CACHE_HOURS_TO_LIVE = 12
