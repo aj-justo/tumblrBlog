@@ -147,7 +147,7 @@ LOGGING = {
 }
 
 # your tumblr url without the 'http://' part
-TUMBLR_USER = 'ajweb.tumblr.com'
+TUMBLRBLOG_TUMBLR_USER = 'ajweb.tumblr.com'
 # we will NOT check the feed unless
 # this time has elapsed since last checking 
-CACHE_HOURS_TO_LIVE = 12
+TUMBLRBLOG_CACHE_TIME_TO_LIVE = 0 # minutes, 720 = 12 hours
