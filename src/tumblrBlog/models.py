@@ -4,11 +4,10 @@ Created on Jul 7, 2011
 @author: aj
 '''
 from django.db import models
-from tumblrBlog import tumblrPosts
 
 class Post(models.Model):    
     post_id = models.IntegerField()
-    date = models.DateTimeField('Publication date')
+    date = models.FloatField('Publication date')
     regular_title = models.CharField('Title', max_length=255)
     slug = models.CharField(max_length=255)
     regular_body = models.TextField()
@@ -17,17 +16,25 @@ class Post(models.Model):
     format = models.CharField(max_length=255)
     
     @classmethod
-    def latest(self):
-        Post.__retrieve
-        return Post.objects.all().order_by('-date')[:10] or []
+    def latests(self, limit):
+        return Post.objects.all().order_by('-date')[:limit] or []
     
+       
+        
     @classmethod
-    def __retrieve():
-        latest_in_cache_time = Post.objects.all(order_by='-date')[0].date
-        if tumblrPosts.check(latest_in_cache_time):
-            [post.save() for post in tumblrPosts.get()]
-            return True
-        return False
+    def TumblrPostToCache(cls, post):
+        cpost = Post()
+        cpost.post_id = post['id']
+        cpost.date = post['unix-timestamp']
+        cpost.regular_title = post['regular-title']
+        cpost.regular_body = post['regular-body']
+        cpost.type = post['type']
+        cpost.format = post['format']
+        cpost.tumblr_url = post['url']
+        cpost.slug = post['slug']
+        cpost.save()
+        
+       
 
 class Tag(models.Model):
     tag_id = models.IntegerField()
