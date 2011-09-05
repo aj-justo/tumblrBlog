@@ -118,20 +118,21 @@ def remotePosts():
     return posts
 
 
-def getLatestPosts(limit=10):
+def getLatestPosts(limit=settings.TUMBLRBLOG_MAX_POSTS_HOME_PAGE):
+    syncWithTumblr()
     return models.Post.objects.all().order_by('-date')[:limit]
 
 def getPost(id):
-        syncWithTumblr()
-        try: return models.Post.objects.get(post_id=id)
-        except dexceptions.ObjectDoesNotExist: return False
+    syncWithTumblr()
+    try: return models.Post.objects.get(post_id=id)
+    except dexceptions.ObjectDoesNotExist: return False
     
-def getPosts(date=datetime.datetime.now(), daysback=10):
+def getPosts(date=datetime.datetime.now(), daysback=10, limit=settings.TUMBLRBLOG_MAX_POSTS_HOME_PAGE):
     syncWithTumblr()
     dateback = date - datetime.timedelta(days=daysback)
     dateback = time.mktime(dateback.timetuple())
     try: 
-        return models.Post.objects.filter(date__gte=dateback)
+        return models.Post.objects.filter(date__gte=dateback[:limit])
     except dexceptions.ObjectDoesNotExist: return False
         
 def cleanCache():
