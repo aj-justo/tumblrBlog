@@ -1,18 +1,19 @@
-{% load filters %}
+<!DOCTYPE html>
 <html>
 	<head>
+		{% load filters %}
 		<title>TumblrBlogging</title>
 	</head>
 	<body>
 		{% if post %} 
 		<article>
-			<h2><a href="/posts/{{ post.id }}/{{ post.slug }}/">{{ post|getkey:'regular-title' }}</a></h2>
+			<h2><a href="/posts/{{ post.id }}/{{ post.slug }}/">{{ post.regular_title }}</a></h2>
 			<article>
-				{{post|getkey:'regular-body'|safe}}
+				{{post.regular_body|safe}}
 			</article>
-			<date>
-				{{post|getkey:'unix-timestamp'|time_to_date}}
-			</date>
+			<time>
+				{{post.date|time_to_date}}
+			</time>
 		</article>
 		{% else %}
 		<p>

@@ -1,6 +1,8 @@
+<!DOCTYPE html>
 {% load filters %}
 <html>
 	<head>
+		<meta charset="UTF-8" >
 		<title>TumblrBlogging</title>
 	</head>
 	<body>
@@ -11,11 +13,15 @@
 				{% for post in latest_posts %}
 				<li>
 					<article>
-						<h2><a href="/posts/{{ post.id }}/{{ post.slug }}/">{{ post|getkey:'regular-title' }}</a></h2>
+						<h2>
+							<a href="/posts/{{ post.post_id }}/{{ post.slug }}/">
+							{{ post.regular_title }}
+							</a>
+						</h2>
 						<article>
-							{{post|getkey:'regular-body'|truncatewords:40|safe}}
+							{{post.regular_body|truncatewords:40|safe}}
 						</article>
-						<date>{{post|getkey:'unix-timestamp'|time_to_date}}</date>
+						<time>{{post.date|time_to_date}}</time>
 					</article>
 				</li>
 				{% endfor %}
