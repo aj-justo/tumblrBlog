@@ -6,7 +6,7 @@ Created on Jul 7, 2011
 from django.db import models
 
 class Post(models.Model):    
-    post_id = models.IntegerField()
+    post_id = models.IntegerField(unique=True)
     date = models.FloatField('Publication date')
     regular_title = models.CharField('Title', max_length=255)
     slug = models.CharField(max_length=255)
@@ -15,9 +15,12 @@ class Post(models.Model):
     type = models.CharField('Type', max_length=255)
     format = models.CharField(max_length=255)
     
-    @classmethod
-    def latests(self, limit):
-        return Post.objects.all().order_by('-date')[:limit] or []
+        
+    
+#    @classmethod
+#    def latest(self, limit):
+#        
+#        return Post.objects.all().order_by('-date')[:limit] or []
     
        
         
@@ -42,10 +45,10 @@ class Tag(models.Model):
     tag = models.CharField(max_length=255)
     
     
-class Settings(models.Model):
-    tumblr_account = models.CharField('Tumblr user address', max_length=255)
-    last_retrieval_date = models.DateTimeField('Last retrieval')
-    cache_time_to_live  = models.IntegerField('Cache time to live')
-    account_name = models.CharField('Account name (optional)', max_length=255)
-    
+#class Settings(models.Model):
+#    tumblr_account = models.CharField('Tumblr user address', max_length=255)
+#    last_retrieval_date = models.DateTimeField('Last retrieval')
+#    cache_time_to_live  = models.IntegerField('Cache time to live')
+#    account_name = models.CharField('Account name (optional)', max_length=255)
+#    
 

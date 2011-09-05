@@ -151,3 +151,5 @@ TUMBLRBLOG_TUMBLR_USER = 'ajweb.tumblr.com'
 # we will NOT check the feed unless
 # this time has elapsed since last checking 
 TUMBLRBLOG_CACHE_TIME_TO_LIVE = 0 # minutes, 720 = 12 hours
+# max. number of posts for home page
+TUMBLRBLOG_MAX_POSTS_HOME_PAGE = 10
