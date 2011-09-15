@@ -4,7 +4,7 @@ Created on Jul 8, 2011
 @author: ajweb.eu
 '''
 from django.template import Context, loader
-from tumblrBlog import tumblrPosts
+from models import tumblrPosts
 from django.http import HttpResponse
 
 
