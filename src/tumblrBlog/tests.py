@@ -5,9 +5,11 @@ Created on Jul 11, 2011
 '''
 import unittest
 from tumblrBlog import models, settings
-from tumblrBlog.models import tumblrPosts # so we can use tumblrPosts.xxx as before the refactoring
+# to use tumblrPosts.xxx as before the refactoring
+from tumblrBlog.models import tumblrPosts
 import datetime, time, random
 import django.core.exceptions as dexceptions
+
 
 class TestUnits(unittest.TestCase):
     '''
@@ -21,7 +23,6 @@ class TestUnits(unittest.TestCase):
       
     def setUp(self):
         pass
-
 
     def tearDown(self):
         tumblrPosts.cleanCache()
@@ -41,10 +42,9 @@ class TestUnits(unittest.TestCase):
                     format='text'
                     )
             posts.append(post)
-            limit = limit - 1
+            limit -= 1
             self.ids.append(id)
         return posts
-
 
     def savePostsToCache(self, posts):
         [post.save() for post in posts]
@@ -95,15 +95,14 @@ class TestUnits(unittest.TestCase):
     def testRealSyncTumblrWithCache(self):
         models.Post.objects.all().delete()
         tumblrPosts.syncWithTumblr()
-        self.assertFalse(tumblrPosts.checkCacheSync())    
-        
-        
+        self.assertFalse(tumblrPosts.checkCacheSync())
+
+
 class TestCase(unittest.TestCase):
     '''
         these test the public API of the app
         as it would be used from a django view
     '''
-    
     sampleId = 7225327240
     
     def tearUp(self):       
