@@ -84,11 +84,11 @@ class TestUnits(unittest.TestCase):
     # it does NOT need to connect to tumblr
     def testLocalAndRemotePostsSynced(self):
         self.savePostsToCache(self.generateTestPosts(5))
-        localPosts = tumblrPosts.localPosts()
+        localPosts = tumblrPosts.__localPosts()
         # assuming posts are already synced
         self.assertFalse(tumblrPosts.checkCacheSync(localPosts, localPosts))
         self.savePostsToCache(self.generateTestPosts(2))
-        localPosts2 = tumblrPosts.localPosts()
+        localPosts2 = tumblrPosts.__localPosts()
         self.assertTrue(tumblrPosts.checkCacheSync(localPosts, localPosts2))
         
     # it DOES CONNECT to tumblr    

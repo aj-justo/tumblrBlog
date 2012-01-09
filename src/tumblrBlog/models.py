@@ -11,13 +11,14 @@ import django.core.exceptions as dexceptions
 
 class Post(models.Model):    
     post_id = models.IntegerField(unique=True)
-    date = models.FloatField('Publication date')
+    date = models.DateTimeField('Publication date')
     regular_title = models.CharField('Title', max_length=255)
     slug = models.CharField(max_length=255)
     regular_body = models.TextField()
     tumblr_url = models.URLField('Permalink')
     type = models.CharField('Type', max_length=255)
     format = models.CharField(max_length=255)
+    visible = models.BooleanField()
 
     class Meta:
         app_label = 'tumblrBlog'
@@ -27,13 +28,14 @@ class Post(models.Model):
     def TumblrPostToCache(cls, post):
         cpost = Post()
         cpost.post_id = post['id']
-        cpost.date = post['unix-timestamp']
+        cpost.date = datetime.datetime.fromtimestamp( post['unix-timestamp'] )
         cpost.regular_title = post['regular-title']
         cpost.regular_body = post['regular-body']
         cpost.type = post['type']
         cpost.format = post['format']
         cpost.tumblr_url = post['url']
         cpost.slug = post['slug']
+        cpost.visible = True
         cpost.save()
         
        
@@ -45,7 +47,9 @@ class Tag(models.Model):
 
     class Meta:
         app_label = 'tumblrBlog'
-    
+
+
+
     
 #class Settings(models.Model):
 #    tumblr_account = models.CharField('Tumblr user address', max_length=255)
@@ -62,7 +66,7 @@ class tumblrPosts(object):
     """
         methods to retrieve posts from cache and from tumblr,
         sync cache, set settings, etc
-        todo: refactor to include only the intermediation between
+        todo: refactor to include only the mediation between
         model and tumblr. Settings should go in settings model in future
     """
     
@@ -100,7 +104,7 @@ class tumblrPosts(object):
                 latest_in_cache_time = Post.objects.all().order_by('date')[:1]['date']
             except Exception:
                 return True
-        cache_time = datetime.timedelta(minutes=cls.getTTL())
+        cache_time = datetime.timedelta(hours=cls.getTTL())
         if not cache_time: return cls.checkCacheSync() # we want to refresh everytime
         # if the TTL has passed, refresh
         # we use last entry on cache while db settings with last_refresh is not implemented
@@ -121,17 +125,17 @@ class tumblrPosts(object):
             localItems = cls.localPosts()
         if remoteItems is None:
             remoteItems = cls.remotePosts()
-        return cls._arePostsListsEqual(localItems, remoteItems, ['regular_body','regular-body'])
+        return cls.__arePostsListsEqual(localItems, remoteItems, ['regular_body','regular-body'])
 
     @classmethod
-    def _arePostsListsEqual(cls, list1, list2, fields):
+    def __arePostsListsEqual(cls, list1, list2, fields):
         if len(list1) != len(list2): return True
-        if cls._getListOfPostsFields(list1, fields) != \
-            cls._getListOfPostsFields(list2, fields): return True
+        if cls.__getListOfPostsFields(list1, fields) != \
+            cls.__getListOfPostsFields(list2, fields): return True
         return False
 
     @classmethod
-    def _getListOfPostsFields(cls, postsList, fields):
+    def __getListOfPostsFields(cls, postsList, fields):
         filteredList = []
         for post in postsList:
             for field in fields:
@@ -171,12 +175,12 @@ class tumblrPosts(object):
     @classmethod
     def getLatestPosts(cls, limit=settings.TUMBLRBLOG_MAX_POSTS_HOME_PAGE):
         cls.syncWithTumblr()
-        return Post.objects.all().order_by('-date')[:limit]
+        return Post.objects.all().filter(visible=True).order_by('-date')[:limit]
     
     @classmethod
     def getPost(cls, id):
         cls.syncWithTumblr()
-        try: return Post.objects.get(post_id=id)
+        try: return Post.objects.get(post_id=id, visible=True)
         except dexceptions.ObjectDoesNotExist: return False
     
     @classmethod    
@@ -185,7 +189,7 @@ class tumblrPosts(object):
         dateback = date - datetime.timedelta(days=daysback)
         dateback = time.mktime(dateback.timetuple())
         try: 
-            return Post.objects.filter(date__gte=dateback)[:limit]
+            return Post.objects.filter(date__gte=dateback, visible=True)[:limit]
         except dexceptions.ObjectDoesNotExist: return False
     
     @classmethod        
