@@ -1,8 +1,8 @@
-'''
+"""
 Created on Jul 11, 2011
-
 @author: aj
-'''
+"""
+
 import unittest
 from tumblrBlog import models, settings
 # to use tumblrPosts.xxx as before the refactoring
@@ -12,12 +12,6 @@ import django.core.exceptions as dexceptions
 
 
 class TestUnits(unittest.TestCase):
-    '''
-        these tests are for the internals of the app.
-        They have been used for the development of the app 
-        but you should not need to run them if you are going to
-        modify the app 
-    '''
         
     ids = []
       
