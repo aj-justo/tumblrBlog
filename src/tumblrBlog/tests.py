@@ -33,7 +33,7 @@ class TestUnits(unittest.TestCase):
             id = random.randint(1000000,10000000)
             post = models.Post(                        
                     post_id=id,
-                    date=time.time(),
+                    date=datetime.datetime.utcnow(),
                     regular_title='This is a test',
                     slug='this-is-a-test',
                     regular_body='testing the test : ' + str(id),
@@ -55,7 +55,7 @@ class TestUnits(unittest.TestCase):
     def testSaveAndDeletePostToDb(self):
         post = models.Post(
                     post_id=1005,
-                    date=time.time(),
+                    date=datetime.datetime.utcnow(),
                     regular_title='This is a test',
                     slug='this-is-a-test',
                     regular_body='testing the test',
@@ -84,11 +84,11 @@ class TestUnits(unittest.TestCase):
     # it does NOT need to connect to tumblr
     def testLocalAndRemotePostsSynced(self):
         self.savePostsToCache(self.generateTestPosts(5))
-        localPosts = tumblrPosts.__localPosts()
+        localPosts = tumblrPosts.localPosts()
         # assuming posts are already synced
         self.assertFalse(tumblrPosts.checkCacheSync(localPosts, localPosts))
         self.savePostsToCache(self.generateTestPosts(2))
-        localPosts2 = tumblrPosts.__localPosts()
+        localPosts2 = tumblrPosts.localPosts()
         self.assertTrue(tumblrPosts.checkCacheSync(localPosts, localPosts2))
         
     # it DOES CONNECT to tumblr    
@@ -116,11 +116,10 @@ class TestCase(unittest.TestCase):
         for post in latest:
             self.assertTrue(post.post_id) 
             self.assertEquals(type(post.regular_body), type(u''))
-            self.assertTrue(datetime.datetime.fromtimestamp(post.date))
-            
+
     def testGetIndividualPost(self):
         post = tumblrPosts.getPost(id=self.sampleId)
-        self.assertEquals(type(post.date), type(0.01))
+        self.assertEquals(type(post.date), type(datetime.datetime.utcnow()))
         self.assertEquals(type(post.regular_body), type(unicode('')))
         
     def testGetPostsInDateRange(self):

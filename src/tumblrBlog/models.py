@@ -187,8 +187,8 @@ class tumblrPosts(object):
     def getPosts(cls, date=datetime.datetime.now(), daysback=10, limit=settings.TUMBLRBLOG_MAX_POSTS_HOME_PAGE):
         cls.syncWithTumblr()
         dateback = date - datetime.timedelta(days=daysback)
-        dateback = time.mktime(dateback.timetuple())
-        try: 
+#        dateback = time.mktime(dateback.timetuple())
+        try:
             return Post.objects.filter(date__gte=dateback, visible=True)[:limit]
         except dexceptions.ObjectDoesNotExist: return False
     
