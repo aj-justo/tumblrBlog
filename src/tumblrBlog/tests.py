@@ -11,7 +11,7 @@ import datetime, time, random
 import django.core.exceptions as dexceptions
 
 
-class TestUnits(unittest.TestCase):
+class DevTests(unittest.TestCase):
         
     ids = []
       
@@ -92,7 +92,7 @@ class TestUnits(unittest.TestCase):
         self.assertFalse(tumblrPosts.checkCacheSync())
 
 
-class TestCase(unittest.TestCase):
+class APItests(unittest.TestCase):
     '''
         these test the public API of the app
         as it would be used from a django view
