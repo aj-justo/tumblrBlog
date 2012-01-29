@@ -4,9 +4,9 @@ Created on Jul 7, 2011
 @author: aj
 """
 from django.db import models
-from util.tumblr import Api, TumblrError 
+from util.tumblr import TumblrError
 from tumblrBlog import settings
-import datetime, time
+import datetime
 import django.core.exceptions as dexceptions
 
 class Post(models.Model):    
@@ -73,13 +73,6 @@ class tumblrPosts(object):
     overrideTTL = None
     
     @classmethod
-    def getTumblrPosts(cls):
-        # if optionsQuery: options = __queryToOptions(optionsQuery)
-        # but first without options
-        t_api = Api(cls.getTumblrUser())
-        return t_api.read()        
-    
-    @classmethod
     def getTTL(cls):
         return cls.overrideTTL or  settings.TUMBLRBLOG_CACHE_TIME_TO_LIVE
     
@@ -105,16 +98,16 @@ class tumblrPosts(object):
             except Exception:
                 return True
         cache_time = datetime.timedelta(hours=cls.getTTL())
-        if not cache_time: return cls.checkCacheSync() # we want to refresh everytime
+        if not cache_time: return True
         # if the TTL has passed, refresh
         # we use last entry on cache while db settings with last_refresh is not implemented
         if datetime.datetime.fromtimestamp(latest_in_cache_time) \
                 <= (datetime.datetime.now() - cache_time):
-            return cls.checkCacheSync()
+            return cls.isCacheSynced()
         return False
 
     @classmethod
-    def checkCacheSync(cls, localItems=None, remoteItems=None):
+    def isCacheSynced(cls, localItems=None, remoteItems=None):
         """
             check if there are tumblr posts that are not in cache
             Args: optionally, the two lists of posts to be compared,
@@ -129,10 +122,10 @@ class tumblrPosts(object):
 
     @classmethod
     def __arePostsListsEqual(cls, list1, list2, fields):
-        if len(list1) != len(list2): return True
+        if len(list1) != len(list2): return False
         if cls.__getListOfPostsFields(list1, fields) != \
-            cls.__getListOfPostsFields(list2, fields): return True
-        return False
+            cls.__getListOfPostsFields(list2, fields): return False
+        return True
 
     @classmethod
     def __getListOfPostsFields(cls, postsList, fields):
@@ -148,10 +141,10 @@ class tumblrPosts(object):
         return filteredList
         
     @classmethod    
-    def syncWithTumblr(cls):
+    def syncLocalPostsWith(cls, remotePosts):
         try:
             if cls.refreshCacheNeeded():
-                for post in cls.getTumblrPosts():
+                for post in remotePosts:
                     #todo: check not already in cache - or will this failed if an existing id is passed?
                     Post.TumblrPostToCache(post)
             return Post.objects.all()
@@ -164,30 +157,28 @@ class tumblrPosts(object):
         return posts
     
     @classmethod
-    def remotePosts(cls):
+    def remotePosts(cls, tumblrAPI=None):
+        if not tumblrAPI:
+            from util.tumblr import Api as tumblrAPI
         posts = []
         try:
-            [ posts.append(post) for post in Api(cls.getTumblrUser()).read() ]
+            [ posts.append(post) for post in tumblrAPI(cls.getTumblrUser()).read() ]
         except TumblrError:
             return posts
         return posts
     
     @classmethod
     def getLatestPosts(cls, limit=settings.TUMBLRBLOG_MAX_POSTS_HOME_PAGE):
-        cls.syncWithTumblr()
         return Post.objects.all().filter(visible=True).order_by('-date')[:limit]
     
     @classmethod
     def getPost(cls, id):
-        cls.syncWithTumblr()
         try: return Post.objects.get(post_id=id, visible=True)
         except dexceptions.ObjectDoesNotExist: return False
     
     @classmethod    
     def getPosts(cls, date=datetime.datetime.now(), daysback=10, limit=settings.TUMBLRBLOG_MAX_POSTS_HOME_PAGE):
-        cls.syncWithTumblr()
         dateback = date - datetime.timedelta(days=daysback)
-#        dateback = time.mktime(dateback.timetuple())
         try:
             return Post.objects.filter(date__gte=dateback, visible=True)[:limit]
         except dexceptions.ObjectDoesNotExist: return False

@@ -10,41 +10,42 @@ from tumblrBlog.models import tumblrPosts
 import datetime, time, random
 import django.core.exceptions as dexceptions
 
+def generateTestPosts(limit):
+    posts = []
+    while limit > 0:
+        id = random.randint(1000000,10000000)
+        post = models.Post(
+            post_id=id,
+            date=datetime.datetime.utcnow(),
+            regular_title='This is a test',
+            slug='this-is-a-test',
+            regular_body='testing the test : ' + str(id),
+            tumblr_url='http://ajweb.es',
+            type='regular',
+            format='text',
+            visible= True
+        )
+        posts.append(post)
+        limit -= 1
+    return posts
+
+
 
 class DevTests(unittest.TestCase):
         
-    ids = []
-      
+
     def setUp(self):
-        pass
+        posts = generateTestPosts(limit=10)
+        self.savePostsToCache(posts)
 
     def tearDown(self):
         tumblrPosts.cleanCache()
 
-    def generateTestPosts(self, limit):       
-        posts = []
-        while limit > 0:
-            id = random.randint(1000000,10000000)
-            post = models.Post(                        
-                    post_id=id,
-                    date=datetime.datetime.utcnow(),
-                    regular_title='This is a test',
-                    slug='this-is-a-test',
-                    regular_body='testing the test : ' + str(id),
-                    tumblr_url='http://ajweb.es',
-                    type='regular',
-                    format='text'
-                    )
-            posts.append(post)
-            limit -= 1
-            self.ids.append(id)
-        return posts
-
     def savePostsToCache(self, posts):
-        [post.save() for post in posts]
+        for post in posts: post.save()
     
     def testRetrieveFromTumblr(self):
-        self.assertTrue(datetime.datetime.fromtimestamp(tumblrPosts.getTumblrPosts().next()['unix-timestamp']))
+        self.assertTrue(type(tumblrPosts.remotePosts(tumblrAPI)[0]['unix-timestamp'])==type(1.0))
     
     def testSaveAndDeletePostToDb(self):
         post = models.Post(
@@ -55,7 +56,8 @@ class DevTests(unittest.TestCase):
                     regular_body='testing the test',
                     tumblr_url='http://ajweb.es',
                     type='regular',
-                    format='text'
+                    format='text',
+                    visible = True
                     )
         post.save()
         self.assertTrue(models.Post.objects.get(post_id=1005))
@@ -77,30 +79,38 @@ class DevTests(unittest.TestCase):
     
     # it does NOT need to connect to tumblr
     def testLocalAndRemotePostsSynced(self):
-        self.savePostsToCache(self.generateTestPosts(5))
+        self.savePostsToCache(generateTestPosts(5))
         localPosts = tumblrPosts.localPosts()
-        # assuming posts are already synced
-        self.assertFalse(tumblrPosts.checkCacheSync(localPosts, localPosts))
-        self.savePostsToCache(self.generateTestPosts(2))
+        # passing same lists of posts should return True
+        self.assertTrue(tumblrPosts.isCacheSynced(localItems=localPosts, remoteItems=localPosts))
+        self.savePostsToCache(generateTestPosts(2))
         localPosts2 = tumblrPosts.localPosts()
-        self.assertTrue(tumblrPosts.checkCacheSync(localPosts, localPosts2))
-        
+        # it should require syncing if the lists of posts are not identical
+        self.assertFalse(tumblrPosts.isCacheSynced(localItems=localPosts, remoteItems=localPosts2))
+
+    def testSaveTumblrPostToCache(self):
+        post = tumblrPosts.remotePosts(tumblrAPI)[0]
+        models.Post.TumblrPostToCache(post)
+
     # it DOES CONNECT to tumblr    
-    def testRealSyncTumblrWithCache(self):
+    def testSyncTumblrWithCache(self):
+        tumblrPosts.setOverrideTTL(0)
         models.Post.objects.all().delete()
-        tumblrPosts.syncWithTumblr()
-        self.assertFalse(tumblrPosts.checkCacheSync())
+        remotePosts = tumblrPosts.remotePosts(tumblrAPI)
+        tumblrPosts.syncLocalPostsWith(remotePosts)
+        localPosts = tumblrPosts.localPosts()
+        self.assertTrue(tumblrPosts.isCacheSynced(localItems=localPosts, remoteItems=remotePosts))
 
 
 class APItests(unittest.TestCase):
-    '''
+    """
         these test the public API of the app
         as it would be used from a django view
-    '''
-    sampleId = 7225327240
-    
-    def tearUp(self):       
-        pass
+    """
+
+    def setUp(self):
+        posts = generateTestPosts(limit=10)
+        for post in posts: post.save()
     
     def tearDown(self):
         tumblrPosts.cleanCache()
@@ -112,17 +122,45 @@ class APItests(unittest.TestCase):
             self.assertEquals(type(post.regular_body), type(u''))
 
     def testGetIndividualPost(self):
-        post = tumblrPosts.getPost(id=self.sampleId)
+        id = models.Post.objects.all()[0].post_id
+        post = tumblrPosts.getPost(id=id)
         self.assertEquals(type(post.date), type(datetime.datetime.utcnow()))
-        self.assertEquals(type(post.regular_body), type(unicode('')))
+        self.assertEquals(type(post.regular_body), type(unicode(' ')))
         
     def testGetPostsInDateRange(self):
         posts = tumblrPosts.getPosts(date=datetime.datetime.now(), daysback=300)
         self.assertTrue(len(posts) > 0)
         for post in posts:
-            self.assertEquals(type(long(self.sampleId)), type(post.post_id))
-        
+            self.assertEquals( type(1), type(post.post_id))
+
+
+class tumblrAPI:
+    """
+    mock class of the tumblrAPI wrapper used by tumblrBlog.models
+    """
+    def __init__(self, tumblrUser):
+        pass
+
+    def read(self):
+        """
+        returns an iterable object with the posts
+        """
+        return self.generateTestTumblrFromModelPosts(generateTestPosts(10))
+
+    def generateTestTumblrFromModelPosts(self, modelPosts):
+        posts = []
+        for mpost in modelPosts:
+            post = {}
+            post['id'] = mpost.post_id
+            post['unix-timestamp'] = time.mktime( mpost.date.timetuple() )
+            post['regular-title'] = mpost.regular_title
+            post['regular-body'] = mpost.regular_body
+            post['type'] = mpost.type
+            post['format'] = mpost.format
+            post['url'] = mpost.tumblr_url
+            post['slug'] = mpost.slug
+            posts.append(post)
+        return posts
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testTumblrPostsGetPosts']
     unittest.main()
